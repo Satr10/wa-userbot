@@ -17,9 +17,10 @@ const (
 )
 
 type Command struct {
-	ctx    context.Context
-	client *whatsmeow.Client
-	evt    *events.Message
-	args   []string
+	ctx             context.Context
+	client          *whatsmeow.Client
+	evt             *events.Message
+	args            []string
 	PermissionLevel PermissionLevel
+	Handler         CommandFunc
 }
