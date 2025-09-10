@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
+	"github.com/Satr10/wa-userbot/internal/config"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -15,21 +15,25 @@ import (
 // CommandFunc defines the signature for command handler functions.
 type CommandFunc func(Command) (whatsmeow.SendResponse, error)
 
+var Commands = registerCommands()
+
 // Handler manages command registration and execution.
 type Handler struct {
 	client   *whatsmeow.Client
 	registry map[string]CommandFunc
 	logger   waLog.Logger
 	prefix   string
+	cfg      config.Config
 }
 
 // NewHandler creates a new command handler.
-func NewHandler(client *whatsmeow.Client, logger waLog.Logger) *Handler {
+func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Config) *Handler {
 	h := &Handler{
 		client:   client,
 		registry: make(map[string]CommandFunc),
 		logger:   logger,
 		prefix:   ".",
+		cfg:      config,
 	}
 	// Register commands here
 	h.RegisterCommand("ping", PingCommand)
@@ -43,9 +47,26 @@ func (h *Handler) RegisterCommand(name string, handlerFunc CommandFunc) {
 	h.logger.Infof("Registered command: %s%s", h.prefix, name)
 }
 
+func (h *Handler) checkPermission(senderJID types.JID, chatJID types.JID, command *Command) bool {
+	userLevel := h.getUserLevel(senderJID, chatJID)
+	return userLevel >= int(command.PermissionLevel)
+}
+
+func (h *Handler) getUserLevel(senderJID types.JID, chatJID types.JID) int {
+
+	// TODO: finish this later
+	if senderJID.String() == fmt.Sprintf("%s@s.whatsapp.net", h.cfg.OwnerID) {
+		return int(Owner)
+	}
+
+	// TODO: add check for group admin
+
+	return int(Everyone)
+}
+
 // HandleEvent processes incoming message events to check for commands.
 func (h *Handler) HandleEvent(evt *events.Message) {
-	h.client.MarkRead([]types.MessageID{evt.Info.ID}, time.Now(), evt.Info.Chat, evt.Info.Sender)
+	// h.client.MarkRead([]types.MessageID{evt.Info.ID}, time.Now(), evt.Info.Chat, evt.Info.Sender)
 	// ignore message from self
 	// if evt.Info.IsFromMe {
 	// 	return
@@ -95,6 +116,18 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 		// Optionally send "unknown command" message
 		h.logger.Infof("Unknown command received: %s", commandName)
 		// _, _ = h.client.SendMessage(context.Background(), evt.Info.Chat, &waProto.Message{Conversation: proto.String("Unknown command.")})
+		return
+	}
+
+	command, exists := Commands[commandName]
+	if !exists {
+		// Optionally send "unknown command" message
+		h.logger.Infof("Unknown command received: %s", commandName)
+		// _, _ = h.client.SendMessage(context.Background(), evt.Info.Chat, &waProto.Message{Conversation: proto.String("Unknown command.")})
+		return
+	}
+	// check command PermissionLevel
+	if !h.checkPermission(evt.Info.Sender, evt.Info.Chat, command) {
 		return
 	}
 
