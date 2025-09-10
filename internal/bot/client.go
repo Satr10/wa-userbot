@@ -63,10 +63,14 @@ func NewBot(logger waLog.Logger, config config.Config) (newBot *Bot, err error) 
 			return nil, err
 		}
 	}
+	cmdHandler, err := commands.NewHandler(client, logger, config)
+	if err != nil {
+		return nil, err
+	}
 	botInstance := &Bot{
 		logger:     logger,
 		client:     client,
-		cmdHandler: commands.NewHandler(client, logger, config),
+		cmdHandler: cmdHandler,
 		botUptime:  time.Now(),
 		cfg:        config,
 	}
