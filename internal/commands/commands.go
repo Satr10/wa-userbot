@@ -9,6 +9,7 @@ func registerCommands() map[string]*Command {
 
 	commands["ping"] = &Command{
 		PermissionLevel: Everyone,
+		Handler:         PingCommand,
 	}
 
 	return commands
