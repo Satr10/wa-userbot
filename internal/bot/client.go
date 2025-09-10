@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/Satr10/wa-userbot/internal/commands"
+	"github.com/Satr10/wa-userbot/internal/config"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
-	"go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
@@ -20,9 +20,10 @@ type Bot struct {
 	logger     waLog.Logger
 	cmdHandler *commands.Handler
 	botUptime  time.Time
+	cfg        config.Config
 }
 
-func NewBot(logger waLog.Logger) (newBot *Bot, err error) {
+func NewBot(logger waLog.Logger, config config.Config) (newBot *Bot, err error) {
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	ctx := context.Background()
 	container, err := sqlstore.New(ctx, "sqlite3", "file:database.db?_foreign_keys=on", dbLog)
@@ -65,10 +66,11 @@ func NewBot(logger waLog.Logger) (newBot *Bot, err error) {
 	botInstance := &Bot{
 		logger:     logger,
 		client:     client,
-		cmdHandler: commands.NewHandler(client, logger),
+		cmdHandler: commands.NewHandler(client, logger, config),
 		botUptime:  time.Now(),
+		cfg:        config,
 	}
-	client.SendPresence(types.PresenceAvailable)
+	// client.SendPresence(types.PresenceAvailable)
 	client.AddEventHandler(botInstance.eventHandler)
 	return botInstance, nil
 }
