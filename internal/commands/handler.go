@@ -20,7 +20,7 @@ var Commands = registerCommands()
 // Handler manages command registration and execution.
 type Handler struct {
 	client   *whatsmeow.Client
-	registry map[string]CommandFunc
+	registry map[string]Command
 	logger   waLog.Logger
 	prefix   string
 	cfg      config.Config
@@ -30,22 +30,23 @@ type Handler struct {
 func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Config) *Handler {
 	h := &Handler{
 		client:   client,
-		registry: make(map[string]CommandFunc),
+		registry: make(map[string]Command),
 		logger:   logger,
 		prefix:   ".",
 		cfg:      config,
 	}
+	// removed moved to commands.go
 	// Register commands here
-	h.RegisterCommand("ping", PingCommand)
+	// h.RegisterCommand("ping", PingCommand)
 
 	return h
 }
 
 // RegisterCommand adds a new command to the registry.
-func (h *Handler) RegisterCommand(name string, handlerFunc CommandFunc) {
-	h.registry[strings.ToLower(name)] = handlerFunc
-	h.logger.Infof("Registered command: %s%s", h.prefix, name)
-}
+// func (h *Handler) RegisterCommand(name string, handlerFunc CommandFunc) {
+// 	h.registry[strings.ToLower(name)] = handlerFunc
+// 	h.logger.Infof("Registered command: %s%s", h.prefix, name)
+// }
 
 func (h *Handler) checkPermission(senderJID types.JID, chatJID types.JID, command *Command) bool {
 	userLevel := h.getUserLevel(senderJID, chatJID)
@@ -111,14 +112,6 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 	args := parts[1:]
 
 	// Look up command in registry
-	cmdFunc, exists := h.registry[commandName]
-	if !exists {
-		// Optionally send "unknown command" message
-		h.logger.Infof("Unknown command received: %s", commandName)
-		// _, _ = h.client.SendMessage(context.Background(), evt.Info.Chat, &waProto.Message{Conversation: proto.String("Unknown command.")})
-		return
-	}
-
 	command, exists := Commands[commandName]
 	if !exists {
 		// Optionally send "unknown command" message
@@ -136,7 +129,7 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 	// Execute command in a goroutine to avoid blocking the event handler
 	go func() {
 		ctx := context.Background()
-		_, err := cmdFunc(Command{ctx: ctx, evt: evt, client: h.client, args: args})
+		_, err := command.Handler(Command{ctx: ctx, evt: evt, client: h.client, args: args})
 		if err != nil {
 			h.logger.Errorf("Error executing command '%s': %v", commandName, err)
 			// Send error message to user
