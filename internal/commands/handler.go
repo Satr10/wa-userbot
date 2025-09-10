@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Satr10/wa-userbot/internal/config"
 	"go.mau.fi/whatsmeow"
@@ -17,6 +18,8 @@ type CommandFunc func(Command) (whatsmeow.SendResponse, error)
 
 var Commands = registerCommands()
 
+const Footer = "\n\n_pesan otomatis oleh bot_"
+
 // Handler manages command registration and execution.
 type Handler struct {
 	client   *whatsmeow.Client
@@ -24,22 +27,31 @@ type Handler struct {
 	logger   waLog.Logger
 	prefix   string
 	cfg      config.Config
+	locTime  *time.Location
 }
 
 // NewHandler creates a new command handler.
-func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Config) *Handler {
+func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Config) (*Handler, error) {
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		// Jika lokasi tidak ditemukan, aplikasi tidak bisa berfungsi dengan benar.
+		// Sebaiknya hentikan aplikasi di sini.
+		return nil, fmt.Errorf("gagal memuat lokasi Asia/Jakarta: %w", err)
+	}
+
 	h := &Handler{
 		client:   client,
 		registry: make(map[string]Command),
 		logger:   logger,
 		prefix:   ".",
 		cfg:      config,
+		locTime:  loc,
 	}
 	// removed moved to commands.go
 	// Register commands here
 	// h.RegisterCommand("ping", PingCommand)
 
-	return h
+	return h, nil
 }
 
 // RegisterCommand adds a new command to the registry.
@@ -73,10 +85,11 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 	// 	return
 	// }
 
+	// remove because now we have PermissionLevel
 	// ignore if message not from self
-	if !evt.Info.IsFromMe {
-		return
-	}
+	// if !evt.Info.IsFromMe {
+	// 	return
+	// }
 
 	// mendapatkan pesan dari extended message
 	msgText := ""
@@ -94,12 +107,16 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 
 	// Trim whitespace and check for prefix
 	trimmedText := strings.TrimSpace(msgText)
-	if !strings.HasPrefix(trimmedText, h.prefix) {
-		// handle all message
-		// HandleSemuaPesan(context.Background(), h.client, evt, msgText)
-		// mungkin return aja ya, biar kode yang dibawah gak dieksekusi(boros resource wkwkwk)
-		return // Not a command
+	if strings.HasPrefix(trimmedText, h.prefix) {
+		// pass jika ini adalah command ke HandleCommand
+		h.HandleCommand(trimmedText, evt)
 	}
+
+	// jika bukan command akan di pass ke MessageHandler
+	h.MessageHandler(evt)
+}
+
+func (h *Handler) HandleCommand(trimmedText string, evt *events.Message) {
 
 	// Split into command and arguments
 	parts := strings.Fields(trimmedText)
@@ -141,4 +158,33 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 			})
 		}
 	}()
+}
+
+func (h *Handler) MessageHandler(evt *events.Message) {
+	h.AFKHandler(evt)
+}
+
+func (h *Handler) AFKHandler(evt *events.Message) {
+	//check time for automated afk message 22.00-07.00
+	now := time.Now().In(h.locTime)
+
+	// 2. Buat batas waktu untuk HARI INI secara spesifik
+	// Ini membuat objek waktu tanpa harus mem-parsing string, lebih efisien.
+	startAFK := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, h.locTime)
+	endAFK := time.Date(now.Year(), now.Month(), now.Day(), 7, 0, 0, 0, h.locTime)
+
+	// 3. Lakukan pengecekan yang presisi
+	if now.After(startAFK) || now.Before(endAFK) {
+		rawText := fmt.Sprintf("Hai! 👋 Terima kasih atas pesannya. Saat ini saya sedang dalam mode istirahat (22.00 - 07.00) dan semua notifikasi sedang nonaktif. Pesan Anda sudah diterima dengan baik dan akan saya balas besok pagi ya. Terima kasih!%s", Footer)
+		textMsg := TextMessage{
+			ctx:    context.Background(),
+			evt:    evt,
+			client: h.client,
+			text:   rawText,
+		}
+		_, err := ReplyToTextMesssage(textMsg)
+		if err != nil {
+			h.logger.Errorf("error sending afk message, err: %s", err)
+		}
+	}
 }
