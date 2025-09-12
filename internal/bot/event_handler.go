@@ -1,4 +1,3 @@
-
 package bot
 
 import (
@@ -29,4 +28,3 @@ func (b *Bot) eventHandler(evt any) {
 		b.logger.Debugf("Ignored debug, event: %v", evt)
 	}
 }
-
