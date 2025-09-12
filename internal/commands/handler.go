@@ -19,7 +19,6 @@ type CommandFunc func(Command) (whatsmeow.SendResponse, error)
 
 var Commands = registerCommands()
 
-const Footer = "\n\n_pesan otomatis oleh bot_"
 
 // Handler manages command registration and execution.
 type Handler struct {

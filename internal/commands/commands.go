@@ -4,6 +4,8 @@ import (
 	"go.mau.fi/whatsmeow"
 )
 
+const Footer = "\n\n_pesan otomatis oleh bot_"
+
 func registerCommands() map[string]*Command {
 	commands := make(map[string]*Command)
 
@@ -16,5 +18,5 @@ func registerCommands() map[string]*Command {
 }
 
 func PingCommand(c Command) (whatsmeow.SendResponse, error) {
-	return ReplyToTextMesssage(TextMessage{ctx: c.ctx, client: c.client, evt: c.evt, text: "Pong"})
+	return ReplyToTextMesssage(TextMessage{ctx: c.ctx, client: c.client, evt: c.evt, text: "Pong" + Footer})
 }
