@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -164,7 +165,24 @@ func (h *Handler) MessageHandler(evt *events.Message) {
 	h.AFKHandler(evt)
 }
 
+// TODO: need improvements
 func (h *Handler) AFKHandler(evt *events.Message) {
+	//check if message is in pm or mention in group
+
+	// Check for mentions in group messages
+	if evt.Info.IsGroup {
+		mentioned := false
+		if evt.Message.ExtendedTextMessage != nil {
+			mentioned = slices.Contains(evt.Message.ExtendedTextMessage.GetContextInfo().GetMentionedJID(), h.client.Store.LID.String())
+		}
+		if !mentioned {
+			h.logger.Infof("No mention in group message, ignoring")
+			return
+		}
+		if mentioned {
+			h.logger.Infof("mentioned in: %s, by %s", evt.Info.Chat, evt.Info.Sender)
+		}
+	}
 	//check time for automated afk message 22.00-07.00
 	now := time.Now().In(h.locTime)
 
