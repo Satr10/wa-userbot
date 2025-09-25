@@ -44,9 +44,10 @@ Aturan Penting:
 
     Gunakan 'reasoning' untuk menjelaskan logika internal Anda kepada sistem.
 
-    Berikut adalah format JSON yang WAJIB Anda gunakan:
-    JSON
+    --- ATURAN PENGECUALIAN PENTING ---
+    Jika input dari pengguna secara eksplisit menyatakan ada masalah yang mencegah analisis (contoh: "URL tidak saya masukan karena terlalu panjang dan berbahaya"), Anda TIDAK PERLU memanggil tools. Langsung berikan respons dengan "status": "ERROR", kategori "SUSPICIOUS", dan gunakan field 'explanation' untuk memberikan PERINGATAN KERAS kepada pengguna dengan bahasa yang tegas. Jelaskan bahwa input yang tidak wajar dapat mengganggu sistem.
 
+    Berikut adalah format JSON yang WAJIB Anda gunakan:
     {
       "investigation_id": "string",
       "status": "string (ONGOING | COMPLETED | ERROR)",
