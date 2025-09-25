@@ -2,11 +2,17 @@ package commands
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"log/slog"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
 
+	"github.com/Satr10/wa-userbot/internal/ai"
+	aitools "github.com/Satr10/wa-userbot/internal/ai_tools"
 	"github.com/Satr10/wa-userbot/internal/config"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
@@ -25,6 +31,9 @@ type Handler struct {
 	prefix   string
 	cfg      config.Config
 	locTime  *time.Location
+	gemini   *ai.Gemini
+	urlRegex *regexp.Regexp
+	log      *slog.Logger
 }
 
 // NewHandler creates a new command handler.
@@ -34,6 +43,14 @@ func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Con
 		return nil, fmt.Errorf("gagal memuat lokasi Asia/Jakarta: %w", err)
 	}
 
+	aiTools := aitools.NewTools(config.GSBAPIKey)
+	newGemini, err := ai.NewGemini(context.TODO(), config.GeminiAPIKey, ai.UrlCheckSystemPrompt, aiTools)
+	if err != nil {
+		return nil, err
+	}
+
+	urlRegex := regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.-]*:(//)?[^\s]*|\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b(?:/[^\s]*)?`)
+
 	h := &Handler{
 		client:   client,
 		registry: make(map[string]*Command), // Changed to hold pointers
@@ -41,6 +58,8 @@ func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Con
 		prefix:   ".",
 		cfg:      config,
 		locTime:  loc,
+		gemini:   newGemini,
+		urlRegex: urlRegex,
 	}
 
 	h.registerCommands()
@@ -95,7 +114,7 @@ func (h *Handler) HandleEvent(evt *events.Message) {
 		return // It's a command, so we stop further processing
 	}
 
-	h.MessageHandler(evt)
+	h.MessageHandler(evt, msgText)
 }
 
 func (h *Handler) HandleCommand(trimmedText string, evt *events.Message) {
@@ -134,8 +153,9 @@ func (h *Handler) HandleCommand(trimmedText string, evt *events.Message) {
 	}()
 }
 
-func (h *Handler) MessageHandler(evt *events.Message) {
+func (h *Handler) MessageHandler(evt *events.Message, msgText string) {
 	h.AFKHandler(evt)
+	h.UrlScan(evt, msgText)
 }
 
 func (h *Handler) AFKHandler(evt *events.Message) {
@@ -167,6 +187,30 @@ func (h *Handler) AFKHandler(evt *events.Message) {
 		_, err := ReplyToTextMesssage(textMsg)
 		if err != nil {
 			h.logger.Errorf("error sending afk message, err: %s", err)
+		}
+	}
+}
+
+func (h *Handler) UrlScan(evt *events.Message, msgText string) {
+	if evt.Info.IsFromMe {
+		fmt.Println("TRIGGERED")
+		allUrls := h.urlRegex.FindAll([]byte(msgText), -1)
+		for _, url := range allUrls {
+			hash := sha256.Sum256([]byte(url))
+			id := hex.EncodeToString(hash[:])
+
+			initialPrompt := fmt.Sprintf("Mulai investigasi untuk URL: %s dengan ID: %s", url, id)
+			result, err := h.gemini.URLScan(context.TODO(), initialPrompt, id)
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+			}
+			textMessage := TextMessage{
+				ctx:    context.TODO(),
+				client: h.client,
+				evt:    evt,
+				text:   result.FormatWhatsAppMessage() + Footer,
+			}
+			ReplyToTextMesssage(textMessage)
 		}
 	}
 }
