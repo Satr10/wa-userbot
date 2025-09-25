@@ -73,6 +73,10 @@ func (h *Handler) registerCommands() {
 		PermissionLevel: Everyone,
 		Handler:         h.PingCommand,
 	}
+	h.registry["edit"] = &Command{
+		PermissionLevel: Everyone,
+		Handler:         h.EditMsgTest,
+	}
 
 	// Register other commands here in the future
 	h.logger.Infof("Registered %d commands", len(h.registry))
