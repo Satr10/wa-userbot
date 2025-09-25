@@ -197,16 +197,31 @@ func (h *Handler) AFKHandler(evt *events.Message) {
 
 func (h *Handler) UrlScan(evt *events.Message, msgText string) {
 	if evt.Info.IsFromMe {
-		fmt.Println("TRIGGERED")
 		allUrls := h.urlRegex.FindAll([]byte(msgText), -1)
 		for _, url := range allUrls {
 			hash := sha256.Sum256([]byte(url))
 			id := hex.EncodeToString(hash[:])
 
-			initialPrompt := fmt.Sprintf("Mulai investigasi untuk URL: %s dengan ID: %s", url, id)
+			var initialPrompt string
+			if len(url) > 512 {
+				initialPrompt = fmt.Sprintf("Mulai investigasi untuk URL dengan ID: %s. URL SANGAT PANJANG (%d karakter), indikasikan potensi serangan DoS atau upaya mengaburkan URL asli. URL: saya tidak masukan karena berbahaya bisa membuat program crash atau error.JIKA PANJANG KARAKTER URL KETERLALUAN MENURUTMU, BERI PERINGATAN KERAS!!! KEPADA USER JAHIL KARENA INI DAPAT MENYEBABKAN PROGRAM CRASH", id, len(url))
+			} else {
+				initialPrompt = fmt.Sprintf("Mulai investigasi untuk URL: %s dengan ID: %s", url, id)
+			}
+
 			result, err := h.gemini.URLScan(context.TODO(), initialPrompt, id)
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+
+				errorMessage := TextMessage{
+					ctx:    context.TODO(),
+					client: h.client,
+					evt:    evt,
+					text:   "error scanning url" + Footer,
+				}
+				ReplyToTextMesssage(errorMessage)
+
+				fmt.Printf("error scanning url %s: %v\n", url, err)
+				continue // Skip to the next URL
 			}
 			textMessage := TextMessage{
 				ctx:    context.TODO(),
