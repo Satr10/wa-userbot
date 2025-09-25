@@ -6,17 +6,9 @@ import (
 
 const Footer = "\n\n_pesan otomatis oleh bot_"
 
-func registerCommands() map[string]*Command {
-	commands := make(map[string]*Command)
-
-	commands["ping"] = &Command{
-		PermissionLevel: Everyone,
-		Handler:         PingCommand,
-	}
-
-	return commands
-}
-
-func PingCommand(c Command) (whatsmeow.SendResponse, error) {
+// PingCommand handles the ping command.
+// It's now a method of the Handler struct.
+func (h *Handler) PingCommand(c Command) (whatsmeow.SendResponse, error) {
+	// It can now access dependencies from the handler, for example: h.logger.Infof("Pinging...")
 	return ReplyToTextMesssage(TextMessage{ctx: c.ctx, client: c.client, evt: c.evt, text: "Pong" + Footer})
 }
