@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"time"
-
 	"go.mau.fi/whatsmeow"
 )
 
@@ -21,8 +19,6 @@ func (h *Handler) EditMsgTest(c Command) (whatsmeow.SendResponse, error) {
 		return whatsmeow.SendResponse{}, err
 	}
 	firstMsgID := firstMsg.ID
-
-	time.Sleep(5 * time.Second)
 
 	return EditMessage(TextMessage{ctx: c.ctx, client: c.client, evt: c.evt, text: "Pong Edit" + Footer}, firstMsgID)
 
