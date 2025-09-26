@@ -219,7 +219,7 @@ func (h *Handler) AFKHandler(evt *events.Message) {
 }
 
 func (h *Handler) UrlScan(evt *events.Message, msgText string) {
-	if evt.Info.IsFromMe {
+	if evt.Info.IsFromMe || h.perm.IsGroupAllowed(evt.Info.Chat.ToNonAD().String()) {
 		allUrls := h.urlRegex.FindAll([]byte(msgText), -1)
 		for _, url := range allUrls {
 			hash := sha256.Sum256([]byte(url))
