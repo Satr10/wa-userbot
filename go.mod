@@ -9,6 +9,7 @@ require (
 	github.com/likexian/whois v1.15.6
 	github.com/lmittmann/tint v1.1.2
 	github.com/mdp/qrterminal/v3 v3.2.1
+	github.com/sirupsen/logrus v1.9.3
 	go.mau.fi/whatsmeow v0.0.0-20250829123043-72d2ed58e998
 	google.golang.org/genai v1.25.0
 	google.golang.org/protobuf v1.36.8
