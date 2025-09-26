@@ -120,7 +120,7 @@ func (h *Handler) checkPermission(senderJID types.JID, chatJID types.JID, comman
 
 func (h *Handler) getUserLevel(senderJID types.JID, chatJID types.JID) int {
 	// Ambil OwnerID dari config
-	if senderJID.User == h.cfg.OwnerID {
+	if senderJID.String() == h.cfg.OwnerID || senderJID.String() == h.cfg.OwnerLID {
 		return int(Owner)
 	}
 

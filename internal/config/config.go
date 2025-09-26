@@ -11,6 +11,7 @@ type Config struct {
 	GeminiAPIKey string
 	GSBAPIKey    string
 	PostgressURI string
+	OwnerLID     string
 }
 
 // TODO:IMPROVE THIS FUNCTION
@@ -24,6 +25,7 @@ func LoadConfig() (Config, error) {
 		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
 		GSBAPIKey:    os.Getenv("GOOGLE_SAFE_BROWSING_API_KEY"),
 		PostgressURI: os.Getenv("POSTGRES_URI"),
+		OwnerLID:     os.Getenv("OWNER_LID"),
 	}, nil
 
 }
