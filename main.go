@@ -15,10 +15,7 @@ import (
 
 func main() {
 	logger := waLog.Stdout("Main", "Info", true)
-	cfg, err := config.LoadConfig(".env")
-	if err != nil {
-		logger.Errorf("error no .env file(ignore if you use real enviroment variables)")
-	}
+	cfg, _ := config.LoadConfig()
 
 	logger.Infof("Using database URI: %s", os.Getenv("POSTGRES_URI"))
 

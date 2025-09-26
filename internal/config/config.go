@@ -14,11 +14,10 @@ type Config struct {
 }
 
 // TODO:IMPROVE THIS FUNCTION
-func LoadConfig(filePath string) (Config, error) {
-	err := godotenv.Load(filePath)
-	if err != nil {
-		return Config{}, err
-	}
+func LoadConfig() (Config, error) {
+	// godotenv.Load() will load a .env file if it exists, but won't fail if it doesn't.
+	// This is ideal for environments like Leapcell where vars are set directly.
+	godotenv.Load()
 
 	return Config{
 		OwnerID:      os.Getenv("OWNER_ID"),
