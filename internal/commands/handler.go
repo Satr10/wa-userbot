@@ -81,14 +81,6 @@ func (h *Handler) registerCommands() {
 		Handler:         h.EditMsgTest,
 	}
 	// Perintah manajemen tetap hanya untuk Owner
-	h.registry["adduser"] = &Command{
-		PermissionLevel: Owner,
-		Handler:         h.AddUserCommand,
-	}
-	h.registry["deluser"] = &Command{
-		PermissionLevel: Owner,
-		Handler:         h.DelUserCommand,
-	}
 	h.registry["addgroup"] = &Command{
 		PermissionLevel: Owner,
 		Handler:         h.AddGroupCommand,
@@ -165,8 +157,9 @@ func (h *Handler) HandleCommand(trimmedText string, evt *events.Message) {
 		h.logger.Infof("Unknown command received: %s", commandName)
 		return
 	}
+	fmt.Println(evt.Info.Sender.ToNonAD())
 
-	if !h.checkPermission(evt.Info.Sender, evt.Info.Chat, command) {
+	if !h.checkPermission(evt.Info.Sender.ToNonAD(), evt.Info.Chat, command) {
 		return
 	}
 
