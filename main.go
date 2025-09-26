@@ -14,10 +14,9 @@ import (
 )
 
 func main() {
+	go server.StartServer("8080")
 	logger := waLog.Stdout("Main", "Info", true)
 	cfg, _ := config.LoadConfig()
-
-	logger.Infof("Using database URI: %s", os.Getenv("POSTGRES_URI"))
 
 	permManager, err := permissions.NewManager("/tmp/permissions.json")
 	if err != nil {
@@ -28,8 +27,6 @@ func main() {
 		logger.Errorf("Error creating new bot instance, err: %v", err)
 		return
 	}
-
-	go server.StartServer("8080")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
