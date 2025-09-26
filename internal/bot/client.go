@@ -8,7 +8,7 @@ import (
 
 	"github.com/Satr10/wa-userbot/internal/commands"
 	"github.com/Satr10/wa-userbot/internal/config"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -26,7 +26,7 @@ type Bot struct {
 func NewBot(logger waLog.Logger, config config.Config) (newBot *Bot, err error) {
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	ctx := context.Background()
-	container, err := sqlstore.New(ctx, "sqlite3", "file:database.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(ctx, "postgres", config.PostgressURI, dbLog)
 	if err != nil {
 		return nil, err
 	}

@@ -4,9 +4,9 @@ go 1.24.6
 
 require (
 	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.10.9
 	github.com/likexian/whois v1.15.6
 	github.com/lmittmann/tint v1.1.2
-	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mdp/qrterminal/v3 v3.2.1
 	go.mau.fi/whatsmeow v0.0.0-20250829123043-72d2ed58e998
 	google.golang.org/genai v1.25.0
