@@ -20,6 +20,8 @@ func main() {
 		logger.Errorf("error no .env file(ignore if you use real enviroment variables)")
 	}
 
+	logger.Infof("Using database URI: %s", cfg.PostgressURI)
+
 	permManager, err := permissions.NewManager("/tmp/permissions.json")
 	if err != nil {
 		logger.Errorf("error creating new permissions manager err: %v", err)

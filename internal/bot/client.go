@@ -26,6 +26,7 @@ type Bot struct {
 }
 
 func NewBot(logger waLog.Logger, config config.Config, permManager *permissions.Manager) (newBot *Bot, err error) {
+	fmt.Println("DB PATH: ", config.PostgressURI)
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	ctx := context.Background()
 	container, err := sqlstore.New(ctx, "postgres", config.PostgressURI, dbLog)
