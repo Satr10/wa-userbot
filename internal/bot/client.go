@@ -8,6 +8,7 @@ import (
 
 	"github.com/Satr10/wa-userbot/internal/commands"
 	"github.com/Satr10/wa-userbot/internal/config"
+	"github.com/Satr10/wa-userbot/internal/permissions"
 	_ "github.com/lib/pq"
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
@@ -21,9 +22,10 @@ type Bot struct {
 	cmdHandler *commands.Handler
 	botUptime  time.Time
 	cfg        config.Config
+	perm       *permissions.Manager
 }
 
-func NewBot(logger waLog.Logger, config config.Config) (newBot *Bot, err error) {
+func NewBot(logger waLog.Logger, config config.Config, permManager *permissions.Manager) (newBot *Bot, err error) {
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	ctx := context.Background()
 	container, err := sqlstore.New(ctx, "postgres", config.PostgressURI, dbLog)
@@ -63,7 +65,7 @@ func NewBot(logger waLog.Logger, config config.Config) (newBot *Bot, err error) 
 			return nil, err
 		}
 	}
-	cmdHandler, err := commands.NewHandler(client, logger, config)
+	cmdHandler, err := commands.NewHandler(client, logger, config, permManager)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +75,7 @@ func NewBot(logger waLog.Logger, config config.Config) (newBot *Bot, err error) 
 		cmdHandler: cmdHandler,
 		botUptime:  time.Now(),
 		cfg:        config,
+		perm:       permManager,
 	}
 	// client.SendPresence(types.PresenceAvailable)
 	client.AddEventHandler(botInstance.eventHandler)

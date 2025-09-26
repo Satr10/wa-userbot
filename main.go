@@ -7,6 +7,7 @@ import (
 
 	"github.com/Satr10/wa-userbot/internal/bot"
 	"github.com/Satr10/wa-userbot/internal/config"
+	"github.com/Satr10/wa-userbot/internal/permissions"
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
@@ -17,7 +18,11 @@ func main() {
 		panic(err)
 	}
 
-	botInstance, err := bot.NewBot(logger, cfg)
+	permManager, err := permissions.NewManager("permissions.json")
+	if err != nil {
+		logger.Errorf("error creating new permissions manager err: %v", err)
+	}
+	botInstance, err := bot.NewBot(logger, cfg, permManager)
 	if err != nil {
 		logger.Errorf("Error creating new bot instance, err: %v", err)
 		return

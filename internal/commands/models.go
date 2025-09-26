@@ -11,6 +11,7 @@ type PermissionLevel int
 
 const (
 	Everyone PermissionLevel = iota
+	CertainChat
 	GroupAdmin
 	SuperAdmin
 	Owner

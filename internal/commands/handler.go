@@ -14,6 +14,7 @@ import (
 	"github.com/Satr10/wa-userbot/internal/ai"
 	aitools "github.com/Satr10/wa-userbot/internal/ai_tools"
 	"github.com/Satr10/wa-userbot/internal/config"
+	"github.com/Satr10/wa-userbot/internal/permissions"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -34,10 +35,11 @@ type Handler struct {
 	gemini   *ai.Gemini
 	urlRegex *regexp.Regexp
 	log      *slog.Logger
+	perm     *permissions.Manager
 }
 
 // NewHandler creates a new command handler.
-func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Config) (*Handler, error) {
+func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Config, permManager *permissions.Manager) (*Handler, error) {
 	loc, err := time.LoadLocation("Asia/Jakarta")
 	if err != nil {
 		return nil, fmt.Errorf("gagal memuat lokasi Asia/Jakarta: %w", err)
@@ -60,6 +62,7 @@ func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Con
 		locTime:  loc,
 		gemini:   newGemini,
 		urlRegex: urlRegex,
+		perm:     permManager,
 	}
 
 	h.registerCommands()
@@ -77,6 +80,23 @@ func (h *Handler) registerCommands() {
 		PermissionLevel: Everyone,
 		Handler:         h.EditMsgTest,
 	}
+	// Perintah manajemen tetap hanya untuk Owner
+	h.registry["adduser"] = &Command{
+		PermissionLevel: Owner,
+		Handler:         h.AddUserCommand,
+	}
+	h.registry["deluser"] = &Command{
+		PermissionLevel: Owner,
+		Handler:         h.DelUserCommand,
+	}
+	h.registry["addgroup"] = &Command{
+		PermissionLevel: Owner,
+		Handler:         h.AddGroupCommand,
+	}
+	h.registry["delgroup"] = &Command{
+		PermissionLevel: Owner,
+		Handler:         h.DelGroupCommand,
+	}
 
 	// Register other commands here in the future
 	h.logger.Infof("Registered %d commands", len(h.registry))
@@ -84,17 +104,27 @@ func (h *Handler) registerCommands() {
 
 func (h *Handler) checkPermission(senderJID types.JID, chatJID types.JID, command *Command) bool {
 	userLevel := h.getUserLevel(senderJID, chatJID)
-	return userLevel >= int(command.PermissionLevel)
+	if userLevel >= int(command.PermissionLevel) {
+		return true
+	}
+
+	if command.PermissionLevel == CertainChat {
+		// Gunakan manajer izin yang baru
+		if h.perm.IsGroupAllowed(chatJID.String()) || h.perm.IsUserAllowed(senderJID.String()) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (h *Handler) getUserLevel(senderJID types.JID, chatJID types.JID) int {
-
-	// TODO: finish this later
-	if senderJID.String() == fmt.Sprintf("%s@s.whatsapp.net", h.cfg.OwnerID) {
+	// Ambil OwnerID dari config
+	if senderJID.User == h.cfg.OwnerID {
 		return int(Owner)
 	}
 
-	// TODO: add check for group admin
+	//TODO: TAMBAHKAN UNTUK CEK APAKAH USER ADALAH ADMIN GRUP
 
 	return int(Everyone)
 }
