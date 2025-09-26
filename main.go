@@ -20,7 +20,7 @@ func main() {
 		logger.Errorf("error no .env file(ignore if you use real enviroment variables)")
 	}
 
-	permManager, err := permissions.NewManager("permissions.json")
+	permManager, err := permissions.NewManager("/tmp/permissions.json")
 	if err != nil {
 		logger.Errorf("error creating new permissions manager err: %v", err)
 	}
