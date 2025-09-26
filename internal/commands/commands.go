@@ -50,46 +50,46 @@ func (h *Handler) EditMsgTest(c Command) (whatsmeow.SendResponse, error) {
 }
 
 // AddUserCommand menambahkan user ke daftar yang diizinkan
-func (h *Handler) AddUserCommand(c Command) (whatsmeow.SendResponse, error) {
-	userIDs := c.evt.Message.ExtendedTextMessage.GetContextInfo().GetMentionedJID()
-	// Validasi input
-	if len(userIDs) == 0 {
-		return h.sendReply(c, "Penggunaan: .adduser <user_id>")
-	}
-
-	// Eksekusi penambahan user
-	for _, userID := range userIDs {
-		if err := h.perm.AddAllowedUser(userID); err != nil {
-			errorMsg := fmt.Sprintf("Gagal menambahkan pengguna: %v", err)
-			return h.sendReply(c, errorMsg)
-		}
-	}
-
-	// Kirim pesan sukses
-	successMsg := fmt.Sprintf("Pengguna %s berhasil ditambahkan.", userIDs)
-	return h.sendReply(c, successMsg)
-}
-
-// DelUserCommand menghapus user dari daftar yang diizinkan
-func (h *Handler) DelUserCommand(c Command) (whatsmeow.SendResponse, error) {
-	userIDs := c.evt.Message.ExtendedTextMessage.GetContextInfo().GetMentionedJID()
-	// Validasi input
-	if len(userIDs) == 0 {
-		return h.sendReply(c, "Penggunaan: .deluser <user_id>")
-	}
-
-	// Eksekusi penghapusan user
-	for _, userID := range userIDs {
-		if err := h.perm.RemoveAllowedUser(userID); err != nil {
-			errorMsg := fmt.Sprintf("Gagal menghapus pengguna: %v", err)
-			return h.sendReply(c, errorMsg)
-		}
-
-	}
-	// Kirim pesan sukses
-	successMsg := fmt.Sprintf("Pengguna %s berhasil dihapus.", userIDs)
-	return h.sendReply(c, successMsg)
-}
+// func (h *Handler) AddUserCommand(c Command) (whatsmeow.SendResponse, error) {
+// 	userIDs := c.evt.Message.ExtendedTextMessage.GetContextInfo().GetMentionedJID()
+// 	// Validasi input
+// 	if len(userIDs) == 0 {
+// 		return h.sendReply(c, "Penggunaan: .adduser <user_id>")
+// 	}
+//
+// 	// Eksekusi penambahan user
+// 	for _, userID := range userIDs {
+// 		if err := h.perm.AddAllowedUser(userID); err != nil {
+// 			errorMsg := fmt.Sprintf("Gagal menambahkan pengguna: %v", err)
+// 			return h.sendReply(c, errorMsg)
+// 		}
+// 	}
+//
+// 	// Kirim pesan sukses
+// 	successMsg := fmt.Sprintf("Pengguna %s berhasil ditambahkan.", userIDs)
+// 	return h.sendReply(c, successMsg)
+// }
+//
+// // DelUserCommand menghapus user dari daftar yang diizinkan
+// func (h *Handler) DelUserCommand(c Command) (whatsmeow.SendResponse, error) {
+// 	userIDs := c.evt.Message.ExtendedTextMessage.GetContextInfo().GetMentionedJID()
+// 	// Validasi input
+// 	if len(userIDs) == 0 {
+// 		return h.sendReply(c, "Penggunaan: .deluser <user_id>")
+// 	}
+//
+// 	// Eksekusi penghapusan user
+// 	for _, userID := range userIDs {
+// 		if err := h.perm.RemoveAllowedUser(userID); err != nil {
+// 			errorMsg := fmt.Sprintf("Gagal menghapus pengguna: %v", err)
+// 			return h.sendReply(c, errorMsg)
+// 		}
+//
+// 	}
+// 	// Kirim pesan sukses
+// 	successMsg := fmt.Sprintf("Pengguna %s berhasil dihapus.", userIDs)
+// 	return h.sendReply(c, successMsg)
+// }
 
 // AddGroupCommand menambahkan grup ke daftar yang diizinkan
 func (h *Handler) AddGroupCommand(c Command) (whatsmeow.SendResponse, error) {
