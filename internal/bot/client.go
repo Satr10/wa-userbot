@@ -57,6 +57,9 @@ func NewBot(logger waLog.Logger, config config.Config, permManager *permissions.
 
 			} else {
 				fmt.Println("Login event:", evt.Event)
+				if evt.Event == "success" {
+					break
+				}
 			}
 		}
 	} else {
