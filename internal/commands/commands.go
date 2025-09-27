@@ -93,6 +93,10 @@ func (h *Handler) EditMsgTest(c Command) (whatsmeow.SendResponse, error) {
 
 // AddGroupCommand menambahkan grup ke daftar yang diizinkan
 func (h *Handler) AddGroupCommand(c Command) (whatsmeow.SendResponse, error) {
+	if !c.evt.Info.IsGroup {
+		errorMsg := ("Gagal menambahkan grup: chat ini bukan grup")
+		return h.sendReply(c, errorMsg)
+	}
 	// Dapatkan group ID dari context
 	groupID := c.evt.Info.Chat.String()
 
@@ -109,6 +113,10 @@ func (h *Handler) AddGroupCommand(c Command) (whatsmeow.SendResponse, error) {
 
 // DelGroupCommand menghapus grup dari daftar yang diizinkan
 func (h *Handler) DelGroupCommand(c Command) (whatsmeow.SendResponse, error) {
+	if !c.evt.Info.IsGroup {
+		errorMsg := ("Gagal menghapus grup: chat ini bukan grup")
+		return h.sendReply(c, errorMsg)
+	}
 	// Dapatkan group ID dari context
 	groupID := c.evt.Info.Chat.String()
 
@@ -122,4 +130,3 @@ func (h *Handler) DelGroupCommand(c Command) (whatsmeow.SendResponse, error) {
 	successMsg := fmt.Sprintf("Grup ini (%s) berhasil dihapus.", groupID)
 	return h.sendReply(c, successMsg)
 }
-
