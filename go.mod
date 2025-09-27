@@ -23,6 +23,7 @@ require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
+	github.com/davidbyttow/govips/v2 v2.16.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
@@ -41,6 +42,7 @@ require (
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
+	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.34.0 // indirect
