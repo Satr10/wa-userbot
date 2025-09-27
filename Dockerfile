@@ -1,6 +1,6 @@
 FROM golang:1.25.1-alpine
 
-RUN apk add --no-cache vips-dev
+RUN apk add --no-cache vips 
 
 WORKDIR /app
 
