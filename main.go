@@ -9,12 +9,10 @@ import (
 	"github.com/Satr10/wa-userbot/internal/bot"
 	"github.com/Satr10/wa-userbot/internal/config"
 	"github.com/Satr10/wa-userbot/internal/permissions"
-	"github.com/Satr10/wa-userbot/internal/server"
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
 func main() {
-	go server.StartServer("8080")
 	logger := waLog.Stdout("Main", "Info", true)
 	cfg, _ := config.LoadConfig()
 
@@ -33,5 +31,4 @@ func main() {
 	<-c
 	logger.Infof("Shutting down...")
 	botInstance.Disconnect()
-	server.Shutdown(context.Background())
 }
