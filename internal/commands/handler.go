@@ -185,36 +185,80 @@ func (h *Handler) MessageHandler(evt *events.Message, msgText string) {
 	h.UrlScan(evt, msgText)
 }
 
+// AFKHandler menangani logika untuk membalas pesan secara otomatis saat di luar jam kerja.
 func (h *Handler) AFKHandler(evt *events.Message) {
-	if evt.Info.IsGroup {
-		mentioned := false
-		if evt.Message.ExtendedTextMessage != nil {
-			mentioned = slices.Contains(evt.Message.ExtendedTextMessage.GetContextInfo().GetMentionedJID(), h.client.Store.LID.String())
-		}
-		if !mentioned {
-			return
-		}
-		if mentioned {
-			h.logger.Infof("mentioned in: %s, by %s", evt.Info.Chat, evt.Info.Sender)
+	// Guard Clause: Abaikan pesan dari diri sendiri.
+	if evt.Info.IsFromMe {
+		return
+	}
+
+	// Periksa apakah saat ini dalam periode AFK.
+	now := time.Now().In(h.locTime)
+	if !h.isWithinAFKHours(now) {
+		return
+	}
+
+	// Tentukan apakah bot harus membalas:
+	// - Selalu balas di Direct Message (DM).
+	// - Di grup, hanya balas jika di-mention.
+	isDM := !evt.Info.IsGroup
+	isMentioned := evt.Info.IsGroup && h.isBotMentioned(evt)
+
+	if !isDM && !isMentioned {
+		return
+	}
+
+	// Jika semua kondisi terpenuhi, kirim pesan AFK.
+	h.sendAFKMessage(evt)
+}
+
+// isBotMentioned memeriksa apakah JID bot ada dalam daftar mention pesan.
+func (h *Handler) isBotMentioned(evt *events.Message) bool {
+	extMsg := evt.Message.ExtendedTextMessage
+	if extMsg == nil || extMsg.ContextInfo == nil {
+		return false
+	}
+
+	mentionedJIDs := extMsg.GetContextInfo().GetMentionedJID()
+	if len(mentionedJIDs) == 0 {
+		return false
+	}
+
+	// Ambil JID bot sekali saja untuk perbandingan.
+	myJID := h.client.Store.GetJID().ToNonAD().String()
+	myLID := h.client.Store.LID.String()
+
+	// Gunakan perulangan untuk efisiensi jika daftar mention besar.
+	// slices.Contains melakukan hal serupa di baliknya.
+	for _, mentioned := range mentionedJIDs {
+		if mentioned == myJID || mentioned == myLID {
+			return true
 		}
 	}
 
-	now := time.Now().In(h.locTime)
-	startAFK := time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, h.locTime)
-	endAFK := time.Date(now.Year(), now.Month(), now.Day(), 7, 0, 0, 0, h.locTime)
+	return false
+}
 
-	if now.After(startAFK) || now.Before(endAFK) {
-		rawText := fmt.Sprintf("Hai! 👋 Terima kasih atas pesannya. Saat ini saya sedang dalam mode istirahat (22.00 - 07.00) dan semua notifikasi sedang nonaktif. Pesan Anda sudah diterima dengan baik dan akan saya balas besok pagi ya. Terima kasih!%s", Footer)
-		textMsg := TextMessage{
-			ctx:    context.Background(),
-			evt:    evt,
-			client: h.client,
-			text:   rawText,
-		}
-		_, err := ReplyToTextMesssage(textMsg)
-		if err != nil {
-			h.logger.Errorf("error sending afk message, err: %s", err)
-		}
+// isWithinAFKHours memeriksa apakah waktu yang diberikan berada dalam rentang AFK (22:00 - 07:00).
+func (h *Handler) isWithinAFKHours(t time.Time) bool {
+	// Logika ini menangani kasus semalam (misal: 22:00 - 07:00 keesokan harinya)
+	hour := t.Hour()
+	return hour >= 22 || hour < 7
+}
+
+// sendAFKMessage merakit dan mengirimkan pesan balasan AFK.
+func (h *Handler) sendAFKMessage(evt *events.Message) {
+	rawText := fmt.Sprintf("Hai! 👋 Terima kasih atas pesannya. Saat ini saya sedang dalam mode istirahat (22.00 - 07.00) dan semua notifikasi sedang nonaktif. Pesan Anda sudah diterima dengan baik dan akan saya balas besok pagi ya. Terima kasih!%s", Footer)
+
+	textMsg := TextMessage{
+		ctx:    context.Background(),
+		evt:    evt,
+		client: h.client,
+		text:   rawText,
+	}
+
+	if _, err := ReplyToTextMesssage(textMsg); err != nil {
+		h.logger.Errorf("error sending afk message, err: %s", err)
 	}
 }
 
