@@ -50,7 +50,7 @@ func NewHandler(client *whatsmeow.Client, logger waLog.Logger, config config.Con
 		return nil, err
 	}
 
-	urlRegex := regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.-]*:(//)?[^\s]*|\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b(?:/[^\s]*)?`)
+	urlRegex := regexp.MustCompile(`(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])`)
 
 	h := &Handler{
 		client:   client,
